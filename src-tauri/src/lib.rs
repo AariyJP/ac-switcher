@@ -8,6 +8,8 @@ pub mod web;
 
 mod discord;
 
+use tauri::Manager;
+
 use commands::{
     add_account_from_file, add_claude_account_from_current,
     add_claude_desktop_account_from_current, add_cursor_account_from_current, cancel_claude_login,
@@ -26,6 +28,12 @@ use commands::{
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(|app, _, _| {
+            if let Some(w) = app.get_webview_window("main") {
+                let _ = w.unminimize();
+                let _ = w.set_focus();
+            }
+        }))
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_process::init())
