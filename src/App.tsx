@@ -20,6 +20,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { useAccounts } from "@/hooks/useAccounts";
 import { AccountCard, AddAccountModal, AppFooter } from "@/components";
 import {
+  type AccountWithUsage,
   type ActiveTool,
   type AuthMode,
   type ProcessInfo,
@@ -94,6 +95,7 @@ const AUTO_WARMUP_LEDGER_STORAGE_KEY = "ai-switcher-auto-warmup-last-success";
 const AUTO_WARMUP_CHECK_INTERVAL_MS = 30 * 1000;
 const AUTO_WARMUP_RETRY_BACKOFF_MS = 60 * 1000;
 const LIMIT_FULL_THRESHOLD = 99.5;
+const ACCOUNT_SEARCH_THRESHOLD = 8;
 type ThemeMode = "light" | "dark" | "system";
 type AutoWarmupLedger = Record<
   string,
@@ -190,6 +192,18 @@ function processDotClass(isRunning: boolean) {
   return isRunning ? "bg-warning" : "bg-success";
 }
 
+function matchesAccountSearch(
+  account: AccountWithUsage,
+  normalizedQuery: string
+): boolean {
+  if (!normalizedQuery) return true;
+
+  return (
+    account.name.toLowerCase().includes(normalizedQuery) ||
+    account.email?.toLowerCase().includes(normalizedQuery) === true
+  );
+}
+
 function App() {
   const [activeTool, setActiveTool] = useState<ActiveTool>(() => {
     if (typeof window === "undefined") return "codex";
@@ -276,6 +290,8 @@ function App() {
     new Set()
   );
   const [maskedAccounts, setMaskedAccounts] = useState<Set<string>>(new Set());
+  const [accountSearchQuery, setAccountSearchQuery] = useState("");
+  const isAccountSearchEnabled = accounts.length >= ACCOUNT_SEARCH_THRESHOLD;
   const [otherAccountsSort, setOtherAccountsSort] = useState<SortKey>("deadline_asc");
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
     if (typeof window === "undefined") return "system";
@@ -329,6 +345,12 @@ function App() {
   useEffect(() => {
     accountsRef.current = accounts;
   }, [accounts]);
+
+  useEffect(() => {
+    if (!isAccountSearchEnabled && accountSearchQuery) {
+      setAccountSearchQuery("");
+    }
+  }, [accountSearchQuery, isAccountSearchEnabled]);
 
   useEffect(() => {
     autoWarmupAccountIdsRef.current = autoWarmupAccountIds;
@@ -1028,6 +1050,24 @@ function App() {
         ? "Theme: light — click for dark"
         : "Theme: dark — click for system";
 
+  const normalizedAccountSearchQuery = isAccountSearchEnabled
+    ? accountSearchQuery.trim().toLowerCase()
+    : "";
+  const hasMatchingActiveAccount =
+    activeAccount !== undefined &&
+    matchesAccountSearch(activeAccount, normalizedAccountSearchQuery);
+  const visibleOtherAccounts = useMemo(
+    () =>
+      sortedOtherAccounts.filter((account) =>
+        matchesAccountSearch(account, normalizedAccountSearchQuery)
+      ),
+    [normalizedAccountSearchQuery, sortedOtherAccounts]
+  );
+  const hasNoMatchingAccounts =
+    normalizedAccountSearchQuery.length > 0 &&
+    !hasMatchingActiveAccount &&
+    visibleOtherAccounts.length === 0;
+
   return (
     <div className="bg-background text-foreground min-h-screen">
       <header className="bg-background sticky top-0 z-40 border-b">
@@ -1280,7 +1320,64 @@ function App() {
           </Empty>
         ) : (
           <div className="flex flex-col gap-8">
-            {activeAccount && (
+            {isAccountSearchEnabled && (
+              <div className="relative max-w-lg">
+                <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400 dark:text-gray-500">
+                  <svg
+                    className="h-4 w-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    aria-hidden="true"
+                  >
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="m20 20-3.5-3.5" strokeLinecap="round" />
+                  </svg>
+                </span>
+                <input
+                  type="search"
+                  value={accountSearchQuery}
+                  onChange={(event) => setAccountSearchQuery(event.target.value)}
+                  placeholder="Search accounts by name or email"
+                  aria-label="Search accounts"
+                  className="w-full rounded-xl border border-gray-300 bg-white py-2.5 pl-10 pr-10 text-sm text-gray-900 shadow-sm transition-colors placeholder:text-gray-400 focus:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-gray-600 dark:focus:ring-gray-800"
+                />
+                {accountSearchQuery.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setAccountSearchQuery("")}
+                    aria-label="Clear account search"
+                    className="absolute inset-y-0 right-2 flex items-center px-2 text-gray-400 transition-colors hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-200"
+                  >
+                    <svg
+                      className="h-4 w-4"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      aria-hidden="true"
+                    >
+                      <path d="m8 8 8 8M16 8l-8 8" strokeLinecap="round" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            )}
+
+            {hasNoMatchingAccounts && (
+              <div className="rounded-2xl border border-dashed border-gray-300 px-6 py-12 text-center dark:border-gray-700">
+                <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                  No matching accounts
+                </h2>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  Try a different account name or email address.
+                </p>
+              </div>
+            )}
+
+            {activeAccount &&
+              matchesAccountSearch(activeAccount, normalizedAccountSearchQuery) && (
               <section>
                 <h2 className="text-muted-foreground mb-4 text-sm font-medium uppercase tracking-wider">
                   Active Account
@@ -1330,11 +1427,15 @@ function App() {
               </section>
             )}
 
-            {otherAccounts.length > 0 && (
+            {visibleOtherAccounts.length > 0 && (
               <section>
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <h2 className="text-muted-foreground text-sm font-medium uppercase tracking-wider">
-                    Other Accounts ({otherAccounts.length})
+                    Other Accounts ({
+                      normalizedAccountSearchQuery
+                        ? `${visibleOtherAccounts.length} of ${otherAccounts.length}`
+                        : otherAccounts.length
+                    })
                   </h2>
                   {activeTool === "codex" && (
                     <div className="flex items-center gap-2">
@@ -1371,7 +1472,7 @@ function App() {
                   )}
                 </div>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  {sortedOtherAccounts.map((account) => (
+                  {visibleOtherAccounts.map((account) => (
                     <AccountCard
                       key={account.id}
                       account={account}

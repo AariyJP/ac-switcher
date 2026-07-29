@@ -107,11 +107,6 @@ export function AddAccountModal({
   };
 
   const handleOAuthLogin = async () => {
-    if (!name.trim()) {
-      setError("Please enter an account name");
-      return;
-    }
-
     try {
       setLoading(true);
       setError(null);
@@ -143,10 +138,6 @@ export function AddAccountModal({
   };
 
   const handleImportFile = async () => {
-    if (!name.trim()) {
-      setError("Please enter an account name");
-      return;
-    }
     if (!fileSource) {
       setError("Please select an auth.json file");
       return;
