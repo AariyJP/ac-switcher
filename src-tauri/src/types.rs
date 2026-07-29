@@ -212,6 +212,7 @@ impl StoredAccount {
         credentials: Vec<ClaudeCredential>,
         oauth_account: Option<serde_json::Value>,
     ) -> Self {
+        let name = Self::resolved_name(name, email.as_ref(), None, "Claude Code");
         Self {
             id: Uuid::new_v4().to_string(),
             name,
@@ -237,6 +238,7 @@ impl StoredAccount {
         session: ClaudeDesktopSession,
         oauth_token_cache_v2: Option<String>,
     ) -> Self {
+        let name = Self::resolved_name(name, email.as_ref(), None, "Claude Desktop");
         Self {
             id: Uuid::new_v4().to_string(),
             name,
@@ -261,6 +263,7 @@ impl StoredAccount {
         access_token: String,
         refresh_token: String,
     ) -> Self {
+        let name = Self::resolved_name(name, email.as_ref(), None, "Cursor");
         Self {
             id: Uuid::new_v4().to_string(),
             name,

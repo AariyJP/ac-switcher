@@ -1,21 +1,24 @@
-import type { AccountResetCredit, AccountResetCredits } from "../types";
-
 interface ResetCreditDateTimeFormatOptions {
   compact?: boolean;
   locale?: string;
   timeZone?: string;
 }
 
-function expiryTimestamp(credit: AccountResetCredit): number | null {
+interface ResetCreditLike {
+  status: string;
+  expires_at: string | null;
+}
+
+function expiryTimestamp(credit: ResetCreditLike): number | null {
   if (!credit.expires_at) return null;
   const timestamp = new Date(credit.expires_at).getTime();
   return Number.isNaN(timestamp) ? null : timestamp;
 }
 
-export function getAvailableResetCredits(
-  resetCredits: AccountResetCredits | null,
+export function getAvailableResetCredits<T extends ResetCreditLike>(
+  resetCredits: { credits: T[] } | null,
   now = Date.now(),
-): AccountResetCredit[] {
+): T[] {
   if (!resetCredits) return [];
 
   return resetCredits.credits

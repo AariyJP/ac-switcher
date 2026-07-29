@@ -1,5 +1,3 @@
-name: Build
-
 on:
   push:
     branches-ignore:
@@ -39,8 +37,9 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
-          key: ${{ matrix.target }}
+          shared-key: ${{ matrix.target }}
+          cache-on-failure: true
 
-      - run: pnpm install
+      - run: pnpm i --frozen-lockfile --prefer-offline
 
       - run: pnpm tauri build --target ${{ matrix.target }}
