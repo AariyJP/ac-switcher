@@ -8,6 +8,8 @@ pub mod web;
 
 mod discord;
 
+use tauri::Manager;
+
 use commands::{
     add_account_from_file, add_claude_account_from_current,
     add_claude_desktop_account_from_current, add_cursor_account_from_current, cancel_claude_login,
@@ -16,7 +18,8 @@ use commands::{
     delete_account, export_accounts_full_encrypted_file, export_accounts_slim_text,
     get_account_usage_stats, get_active_account_info, get_discord_presence_enabled,
     get_masked_account_ids, get_usage, import_accounts_full_encrypted_file,
-    import_accounts_slim_text, kill_codex_processes, list_accounts, open_codex_app,
+    import_accounts_slim_text, kill_codex_processes, kill_tool_processes, list_accounts,
+    open_codex_app,
     refresh_account_metadata, refresh_all_accounts_usage, rename_account,
     set_discord_presence_enabled, set_masked_account_ids, set_window_theme, start_claude_login,
     start_login, switch_account, warmup_account, warmup_all_accounts,
@@ -25,6 +28,12 @@ use commands::{
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(|app, _, _| {
+            if let Some(w) = app.get_webview_window("main") {
+                let _ = w.unminimize();
+                let _ = w.set_focus();
+            }
+        }))
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_process::init())
@@ -72,6 +81,7 @@ pub fn run() {
             // Process detection
             check_processes,
             kill_codex_processes,
+            kill_tool_processes,
             open_codex_app,
             // Window
             set_window_theme,

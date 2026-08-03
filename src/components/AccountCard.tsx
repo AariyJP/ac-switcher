@@ -27,6 +27,10 @@ import { Card, CardAction, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import {
+  formatResetCreditDateTime,
+  getAvailableResetCredits,
+} from "@/lib/resetCredits";
 import { AccountUsageStats } from "@/components/AccountUsageStats";
 import { UsageBar } from "@/components/UsageBar";
 
@@ -112,14 +116,7 @@ function formatResetCreditExpiry(timestamp: string): string {
   const expiryDate = new Date(timestamp);
   if (Number.isNaN(expiryDate.getTime())) return "Expiry unavailable";
 
-  const exact = new Intl.DateTimeFormat("ja-JP", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: false,
-  }).format(expiryDate);
+  const exact = formatResetCreditDateTime(timestamp, { locale: "ja-JP" });
   const remainingMs = expiryDate.getTime() - Date.now();
   if (remainingMs <= 0) return `Expired ${exact}`;
   const remainingHours = Math.floor(remainingMs / (60 * 60 * 1000));
@@ -311,12 +308,7 @@ export function AccountCard({
   const resetFetchError = account.usage?.rate_limit_reset_error;
   const resetAvailableCount =
     resetCredits?.available_count ?? account.usage?.rate_limit_reset_available_count ?? 0;
-  const availableResetCredits = (resetCredits?.credits ?? [])
-    .filter((credit) => credit.status === "available")
-    .sort(
-      (a, b) =>
-        new Date(a.expires_at).getTime() - new Date(b.expires_at).getTime()
-    );
+  const availableResetCredits = getAvailableResetCredits(resetCredits ?? null);
   const resetExpiryLabels =
     resetAvailableCount > 0
       ? Array.from({ length: resetAvailableCount }, (_, index) =>

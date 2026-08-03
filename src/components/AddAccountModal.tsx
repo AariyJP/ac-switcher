@@ -107,11 +107,6 @@ export function AddAccountModal({
   };
 
   const handleOAuthLogin = async () => {
-    if (!name.trim()) {
-      setError("Please enter an account name");
-      return;
-    }
-
     try {
       setLoading(true);
       setError(null);
@@ -143,10 +138,6 @@ export function AddAccountModal({
   };
 
   const handleImportFile = async () => {
-    if (!name.trim()) {
-      setError("Please enter an account name");
-      return;
-    }
     if (!fileSource) {
       setError("Please select an auth.json file");
       return;
@@ -164,11 +155,6 @@ export function AddAccountModal({
   };
 
   const handleAddClaudeCode = async () => {
-    if (!name.trim()) {
-      setError("Please enter an account name");
-      return;
-    }
-
     try {
       setLoading(true);
       setError(null);
@@ -181,10 +167,6 @@ export function AddAccountModal({
   };
 
   const handleAddClaudeDesktop = async () => {
-    if (!name.trim()) {
-      setError("Please enter an account name");
-      return;
-    }
     if (isClaudeDesktopImportBlocked) {
       setError("Close Claude Desktop before importing this account.");
       return;
@@ -202,10 +184,6 @@ export function AddAccountModal({
   };
 
   const handleAddCursor = async () => {
-    if (!name.trim()) {
-      setError("Please enter an account name");
-      return;
-    }
     try {
       setLoading(true);
       setError(null);
@@ -280,13 +258,13 @@ export function AddAccountModal({
 
   const renderNameField = () => (
     <Field>
-      <FieldLabel htmlFor="account-name">Account Name</FieldLabel>
+      <FieldLabel htmlFor="account-name">Account Name (optional)</FieldLabel>
       <Input
         id="account-name"
         type="text"
         value={name}
         onChange={(e) => setName(e.target.value)}
-        placeholder="e.g., Work Account"
+        placeholder="Leave blank to use email"
       />
     </Field>
   );
