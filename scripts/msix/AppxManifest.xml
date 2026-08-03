@@ -3,22 +3,19 @@
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
-  xmlns:desktop6="http://schemas.microsoft.com/appx/manifest/desktop/windows10/6"
-  IgnorableNamespaces="uap rescap desktop6">
+  IgnorableNamespaces="uap rescap">
   <Identity
     Name="AariyJP.AISwitcher"
-    Publisher="CN=C459FDB3-77BE-4076-A66D-95166CA5E457, OID.2.25.311729368913984317654407730594956997722=1"
+    Publisher="CN=C459FDB3-77BE-4076-A66D-95166CA5E457"
     Version="0.0.0.0"
     ProcessorArchitecture="x64" />
   <Properties>
     <DisplayName>AI Switcher</DisplayName>
     <PublisherDisplayName>AariyJP</PublisherDisplayName>
     <Logo>Square150x150Logo.png</Logo>
-    <desktop6:FileSystemWriteVirtualization>disabled</desktop6:FileSystemWriteVirtualization>
-    <desktop6:RegistryWriteVirtualization>disabled</desktop6:RegistryWriteVirtualization>
   </Properties>
   <Dependencies>
-    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.18362.0" MaxVersionTested="10.0.26100.0" />
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26100.0" />
   </Dependencies>
   <Resources>
     <Resource Language="en-US" />
@@ -35,6 +32,5 @@
   </Applications>
   <Capabilities>
     <rescap:Capability Name="runFullTrust" />
-    <rescap:Capability Name="unvirtualizedResources" />
   </Capabilities>
 </Package>
